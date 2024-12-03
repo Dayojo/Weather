@@ -1,16 +1,73 @@
-# Infrastructure as Code with Kubernetes Project
+# Infrastructure Project
 
-This repository contains Infrastructure as Code (IaC) implementation using Terraform, Kubernetes, and Jenkins for deploying a weather microservice.
+This repository follows a step-by-step implementation of infrastructure and microservices.
 
-## Project Structure
+## Step 1: Git Repository and Branch Setup
 
+```bash
+git init my-iac-k8s-project
+cd my-iac-k8s-project
+git checkout -b feature/project-init
+```
+
+## Step 2: Infrastructure as Code with Terraform
+
+### AWS Provider Configuration
+- Region: us-east-1
+- Provider version: ~> 4.0
+- Backend: local state file
+
+### VPC Configuration
+- CIDR: 10.0.0.0/16
+- Public and Private Subnets
+- NAT Gateway enabled
+
+## Step 3: Kubernetes Cluster (EKS)
+
+- Cluster Version: 1.27
+- Node Group Configuration:
+  - Instance Type: t3.medium
+  - Min Size: 1
+  - Max Size: 3
+  - Desired Size: 2
+
+## Step 4: Jenkins on Kubernetes
+
+- Namespace: jenkins
+- Persistent Volume: 10Gi
+- Service Type: LoadBalancer
+- Resource Limits:
+  - CPU: 2
+  - Memory: 2Gi
+
+## Step 5: Weather Microservice
+
+### Components
+- Flask REST API
+- Docker containerization
+- Kubernetes deployment
+- Auto-scaling configuration
+
+### API Endpoints
+- GET /weather?location={city}
+- GET /health
+
+## Step 6: Automation
+
+Deployment script handles:
+- Infrastructure provisioning
+- Kubernetes cluster setup
+- Jenkins deployment
+- Microservice deployment
+
+## Repository Structure
 ```
 project2/
 ├── terraform/
-│   ├── providers.tf
-│   ├── main.tf
-│   ├── variables.tf
-│   └── outputs.tf
+│   ├── providers.tf      # AWS provider configuration
+│   ├── main.tf          # VPC and EKS configuration
+│   ├── variables.tf     # Variable definitions
+│   └── outputs.tf       # Output configurations
 ├── kubernetes/
 │   ├── jenkins-deployment.yaml
 │   └── weather-service.yaml
@@ -23,37 +80,10 @@ project2/
     └── deploy.sh
 ```
 
-## Step-by-Step Implementation
+## GitHub Repository
+[https://github.com/Dayojo/project2](https://github.com/Dayojo/project2)
 
-### 1. Infrastructure Setup
-- VPC creation with public and private subnets
-- EKS cluster deployment
-- Security group configurations
-
-### 2. Kubernetes Configuration
-- EKS cluster setup
-- Jenkins deployment on Kubernetes
-- Weather service deployment
-
-### 3. CI/CD Pipeline
-- Jenkins installation and configuration
-- Pipeline setup for weather microservice
-- Automated deployment process
-
-### 4. Microservice
-- Weather service API implementation
-- Containerization with Docker
-- Kubernetes deployment configuration
-
-## Prerequisites
-
-- AWS CLI configured
-- Terraform installed
-- kubectl installed
-- Helm installed
-- Docker installed
-
-## Getting Started
+## Deployment Instructions
 
 1. Clone the repository:
 ```bash
@@ -61,54 +91,9 @@ git clone https://github.com/Dayojo/project2.git
 cd project2
 ```
 
-2. Initialize Terraform:
+2. Run the deployment script:
 ```bash
-cd terraform
-terraform init
+./scripts/deploy.sh
 ```
 
-3. Deploy infrastructure:
-```bash
-terraform apply
-```
-
-4. Configure kubectl:
-```bash
-aws eks update-kubeconfig --name k8s-cluster --region us-east-1
-```
-
-5. Deploy Jenkins:
-```bash
-kubectl apply -f kubernetes/jenkins-deployment.yaml
-```
-
-6. Deploy the weather service:
-```bash
-kubectl apply -f kubernetes/weather-service.yaml
-```
-
-## Architecture
-
-- AWS VPC with public and private subnets
-- EKS cluster for Kubernetes workloads
-- Jenkins for CI/CD pipeline
-- Weather microservice deployed as containers
-- Load balancer for external access
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Contact
-
-Your Name - [@Dayojo](https://github.com/Dayojo)
-
-Project Link: [https://github.com/Dayojo/project2](https://github.com/Dayojo/project2)
+The script will execute all steps in sequence and provide necessary outputs and credentials.
