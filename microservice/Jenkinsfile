@@ -1,0 +1,88 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'weather-service'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
+        ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        ECR_REPOSITORY = "weather-service"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                dir('microservice') {
+                    sh '''
+                        python -m venv venv
+                        . venv/bin/activate
+                        pip install -r requirements.txt
+                        pytest --cov=. --cov-report=xml
+                        flake8 .
+                        black --check .
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('microservice') {
+                    script {
+                        docker.build("${ECR_REGISTRY}/${ECR_REPOSITORY}:${DOCKER_TAG}")
+                    }
+                }
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                script {
+                    sh """
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                        docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}:${DOCKER_TAG}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    sh """
+                        aws eks update-kubeconfig --name weather-service-eks --region ${AWS_REGION}
+                        kubectl set image deployment/weather-service weather-service=${ECR_REGISTRY}/${ECR_REPOSITORY}:${DOCKER_TAG} -n weather-service
+                    """
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    sh """
+                        kubectl rollout status deployment/weather-service -n weather-service
+                        kubectl get pods -n weather-service
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
