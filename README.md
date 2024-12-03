@@ -1,22 +1,42 @@
 # Infrastructure Project Documentation
 
+## Project Overview
+This project implements a weather service using modern infrastructure practices. It includes:
+- Infrastructure as Code using Terraform
+- Containerized applications using Docker
+- Orchestration using Kubernetes
+- CI/CD pipeline using Jenkins
+- RESTful API using Flask
+
+## Resource Documentation Links
+
+### AWS Resources
+- [AWS VPC Documentation](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html)
+- [AWS EKS Documentation](https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html)
+- [AWS IAM Documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html)
+
+### Terraform Resources
+- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Terraform VPC Module](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest)
+- [Terraform EKS Module](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest)
+
+### Kubernetes Resources
+- [Kubernetes Documentation](https://kubernetes.io/docs/home/)
+- [EKS Best Practices](https://aws.github.io/aws-eks-best-practices/)
+- [Kubernetes Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+
+### Jenkins Resources
+- [Jenkins on Kubernetes](https://www.jenkins.io/doc/book/installing/kubernetes/)
+- [Jenkins Pipeline Syntax](https://www.jenkins.io/doc/book/pipeline/syntax/)
+- [Jenkins Credentials Management](https://www.jenkins.io/doc/book/using/using-credentials/)
+
 ## Step-by-Step Configuration Guide
 
 ### Step 1: Project Setup and AWS Configuration
 
-1. First, ensure AWS CLI is installed and configured:
-```bash
-aws configure
-```
-Enter your AWS credentials:
-```
-AWS Access Key ID: YOUR_ACCESS_KEY
-AWS Secret Access Key: YOUR_SECRET_KEY
-Default region name: us-east-1
-Default output format: json
-```
+Before starting, ensure you have the necessary tools installed and AWS configured.
 
-2. Install required tools:
+#### Required Tools Installation
 ```bash
 # Install Terraform
 brew install terraform
@@ -28,9 +48,29 @@ brew install kubectl
 brew install awscli
 ```
 
+#### AWS Configuration
+```bash
+aws configure
+```
+Enter your AWS credentials:
+```
+AWS Access Key ID: YOUR_ACCESS_KEY
+AWS Secret Access Key: YOUR_SECRET_KEY
+Default region name: us-east-1
+Default output format: json
+```
+
 ### Step 2: Terraform Configuration
 
-1. Create `providers.tf`:
+The Terraform configuration is split into multiple files for better organization and maintainability.
+
+#### providers.tf
+This file configures the AWS provider and sets up the Terraform backend.
+
+**Resource Links:**
+- [AWS Provider Configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#authentication)
+- [Terraform Backend Configuration](https://www.terraform.io/docs/language/settings/backends/index.html)
+
 ```hcl
 provider "aws" {
   region = "us-east-1"
@@ -46,7 +86,13 @@ terraform {
 }
 ```
 
-2. Create `variables.tf`:
+#### variables.tf
+This file defines variables used throughout the Terraform configuration, making it easier to modify common values.
+
+**Resource Links:**
+- [Terraform Variables](https://www.terraform.io/docs/language/values/variables.html)
+- [Variable Validation](https://www.terraform.io/docs/language/values/variables.html#custom-validation-rules)
+
 ```hcl
 variable "cluster_name" {
   description = "Name of the EKS cluster"
@@ -67,7 +113,14 @@ variable "region" {
 }
 ```
 
-3. Create `main.tf`:
+#### main.tf
+This file contains the main infrastructure configuration, including VPC and EKS cluster setup.
+
+**Resource Links:**
+- [VPC Module Documentation](https://registry.terraform.io/modules/terraform-aws-modules/vpc/aws/latest)
+- [EKS Module Documentation](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest)
+- [AWS VPC Architecture](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Scenarios.html)
+
 ```hcl
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
@@ -115,21 +168,17 @@ module "eks" {
 }
 ```
 
-4. Initialize and apply Terraform:
-```bash
-terraform init
-terraform plan
-terraform apply
-```
-
 ### Step 3: Kubernetes Configuration
 
-1. Update kubeconfig:
-```bash
-aws eks update-kubeconfig --name weather-app-cluster --region us-east-1
-```
+#### jenkins-deployment.yaml
+This file defines the Kubernetes resources needed for Jenkins deployment, including namespace, persistent volume, deployment, and service.
 
-2. Create `kubernetes/jenkins-deployment.yaml`:
+**Resource Links:**
+- [Kubernetes Namespaces](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/)
+- [Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
+- [Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+- [Services](https://kubernetes.io/docs/concepts/services-networking/service/)
+
 ```yaml
 apiVersion: v1
 kind: Namespace
@@ -194,14 +243,16 @@ spec:
     app: jenkins
 ```
 
-3. Deploy Jenkins:
-```bash
-kubectl apply -f kubernetes/jenkins-deployment.yaml
-```
-
 ### Step 4: Weather Service Configuration
 
-1. Create `microservice/app.py`:
+#### app.py
+This file contains the Flask application code for the weather service. It provides a RESTful API endpoint for weather information.
+
+**Resource Links:**
+- [Flask Documentation](https://flask.palletsprojects.com/)
+- [Open-Meteo API](https://open-meteo.com/en/docs)
+- [Python Requests Library](https://docs.python-requests.org/en/latest/)
+
 ```python
 from flask import Flask, request, jsonify
 import requests
@@ -244,14 +295,14 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
 ```
 
-2. Create `microservice/requirements.txt`:
-```
-Flask==2.3.3
-requests==2.31.0
-gunicorn==21.2.0
-```
+#### Dockerfile
+This file defines how to build the weather service container image.
 
-3. Create `microservice/Dockerfile`:
+**Resource Links:**
+- [Docker Documentation](https://docs.docker.com/)
+- [Python Docker Official Image](https://hub.docker.com/_/python)
+- [Docker Best Practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+
 ```dockerfile
 FROM python:3.11-slim
 
@@ -265,7 +316,14 @@ EXPOSE 5000
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
 ```
 
-4. Create `kubernetes/weather-service.yaml`:
+#### weather-service.yaml
+This file defines the Kubernetes deployment and service for the weather application.
+
+**Resource Links:**
+- [Kubernetes Deployments](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+- [Kubernetes Services](https://kubernetes.io/docs/concepts/services-networking/service/)
+- [Resource Management](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/)
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -310,7 +368,14 @@ spec:
 
 ### Step 5: CI/CD Pipeline Configuration
 
-1. Create `microservice/Jenkinsfile`:
+#### Jenkinsfile
+This file defines the CI/CD pipeline stages and steps.
+
+**Resource Links:**
+- [Jenkins Pipeline Syntax](https://www.jenkins.io/doc/book/pipeline/syntax/)
+- [Jenkins Pipeline Steps](https://www.jenkins.io/doc/pipeline/steps/)
+- [Jenkins Shared Libraries](https://www.jenkins.io/doc/book/pipeline/shared-libraries/)
+
 ```groovy
 pipeline {
     agent any
@@ -354,9 +419,16 @@ pipeline {
 }
 ```
 
-### Step 6: Deployment Script
+### Step 6: Deployment Automation
 
-1. Create `scripts/deploy.sh`:
+#### deploy.sh
+This script automates the entire deployment process.
+
+**Resource Links:**
+- [Bash Scripting Guide](https://tldp.org/LDP/abs/html/)
+- [AWS CLI Commands](https://docs.aws.amazon.com/cli/latest/reference/)
+- [kubectl Commands](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands)
+
 ```bash
 #!/bin/bash
 
@@ -397,65 +469,65 @@ kubectl apply -f ../kubernetes/weather-service.yaml
 echo -e "${GREEN}Deployment complete!${NC}"
 ```
 
-2. Make the script executable:
-```bash
-chmod +x scripts/deploy.sh
+## Project Structure
+```
+project2/
+├── terraform/          # Infrastructure as Code files
+│   ├── providers.tf    # AWS provider configuration
+│   ├── variables.tf    # Variable definitions
+│   └── main.tf        # Main infrastructure configuration
+├── kubernetes/         # Kubernetes manifests
+│   ├── jenkins-deployment.yaml    # Jenkins deployment configuration
+│   └── weather-service.yaml       # Weather service deployment
+├── microservice/       # Weather service application
+│   ├── app.py         # Flask application
+│   ├── requirements.txt    # Python dependencies
+│   ├── Dockerfile     # Container image definition
+│   └── Jenkinsfile    # CI/CD pipeline definition
+└── scripts/           # Automation scripts
+    └── deploy.sh      # Deployment automation script
 ```
 
-### Step 7: Running the Project
+## GitHub Repository
+[https://github.com/Dayojo/Weather](https://github.com/Dayojo/Weather)
 
-1. Deploy everything:
-```bash
-./scripts/deploy.sh
-```
+## Testing the Deployment
 
-2. Get service URLs:
+After deployment, verify the services:
+
+1. Get Jenkins URL:
 ```bash
-# Get Jenkins URL
 kubectl get svc -n jenkins jenkins -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+```
 
-# Get Weather Service URL
+2. Get Weather Service URL:
+```bash
 kubectl get svc weather-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
 ```
 
-3. Test the weather service:
+3. Test weather service:
 ```bash
 curl "http://[WEATHER_SERVICE_URL]/weather?location=London"
 ```
 
-### Step 8: Cleanup
+Example Response:
+```json
+{
+  "location": "London",
+  "current_weather": {
+    "temperature": 18.5,
+    "precipitation": 0,
+    "wind_speed": 12.3
+  },
+  "timestamp": "2023-09-20T14:30:00Z"
+}
+```
+
+## Cleanup
 
 To destroy all resources:
 ```bash
 terraform destroy -auto-approve
 ```
 
-## Project Structure
-```
-project2/
-├── terraform/
-│   ├── providers.tf
-│   ├── variables.tf
-│   └── main.tf
-├── kubernetes/
-│   ├── jenkins-deployment.yaml
-│   └── weather-service.yaml
-├── microservice/
-│   ├── app.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-│   └── Jenkinsfile
-└── scripts/
-    └── deploy.sh
-```
-
-## Reference Documentation
-- [AWS Documentation](https://docs.aws.amazon.com/)
-- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [EKS Documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html)
-- [Jenkins Documentation](https://www.jenkins.io/doc/)
-- [Kubernetes Documentation](https://kubernetes.io/docs/home/)
-- [Flask Documentation](https://flask.palletsprojects.com/)
-
-## GitHub Repository
-[https://github.com/Dayojo/Weather](https://github.com/Dayojo/Weather)
+This will remove all created AWS resources to prevent ongoing charges.
