@@ -1,0 +1,3 @@
+# Python package dependencies for the weather service application
+flask==2.0.1
+requests==2.26.0
